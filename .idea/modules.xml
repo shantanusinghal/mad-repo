@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/cs760-bayes/cs760-bayes.iml" filepath="$PROJECT_DIR$/cs760-bayes/cs760-bayes.iml" />
+      <module fileurl="file://$PROJECT_DIR$/cs760-neuralnet/cs760-neuralnet.iml" filepath="$PROJECT_DIR$/cs760-neuralnet/cs760-neuralnet.iml" />
+    </modules>
+  </component>
+</project>
