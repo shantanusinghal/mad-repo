@@ -3,3 +3,6 @@
 *.iml
 */target
 */.DS_Store
+*/.ipynb_checkpoints/
+
+cs699-python/*.csv
