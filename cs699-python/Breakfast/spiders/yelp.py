@@ -26,6 +26,7 @@ class YelpSpider(CrawlSpider):
         listing = YelpListing(response)
         yield {
             'title': listing.title,
+            'link': response.url,
             'rating': listing.rating,
             'reviews': listing.num_reviews,
             'phone_number': listing.phone_number,
