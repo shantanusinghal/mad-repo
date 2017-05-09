@@ -11,8 +11,8 @@ class YelpSpider(CrawlSpider):
 
     def start_requests(self):
         for starting_index in xrange(0, 100, 10):
-            yield Request('https://www.yelp.com/search?find_desc=Restaurants&find_loc=Madison,+WI&start=%d'
-                          '&cflt=breakfast_brunch' % starting_index, callback=self.parse_results_page)
+            yield Request(('https://www.yelp.com/search?find_desc=Restaurants&find_loc=Madison%%2C+WI&start=%d'
+                          % starting_index), callback=self.parse_results_page)
 
     # This will be called automatically by Scrapy
     def parse_results_page(self, response):
