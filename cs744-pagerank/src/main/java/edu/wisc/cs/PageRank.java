@@ -1,8 +1,9 @@
 package edu.wisc.cs;
 
 import com.google.common.collect.Iterables;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -39,15 +40,16 @@ public class PageRank {
 
       try (JavaSparkContext context = new JavaSparkContext(conf)) {
 
-        JavaPairRDD<String, Iterable<String>> links = context.textFile(path)
+        // RDD of (url, neighbour) pairs
+        JavaPairRDD<String, Iterable<String>> links = context.textFile(path, 20)
             .filter(notComments)
             .mapToPair(fromNode_ToNodeList)
             .distinct()
             .groupByKey()
-            .cache();
+            .cache(); // Using cache() to keep neighbor lists in RAM
 
-        JavaPairRDD<String, Double> ranks = links
-            .mapValues(neighbours -> 1.0);
+        // RDD of (url, rank) pairs
+        JavaPairRDD<String, Double> ranks = links.mapValues(returnSeedValue);
 
         for (int i = 0; i < iters; i++) {
 
@@ -73,21 +75,52 @@ public class PageRank {
   /*
    * Private helper functions for PageRank computations
    */
-  private static Function<Double, Double> calcRanks = contrib -> 0.15 + contrib * 0.85;
-  private static Function<String, Boolean> notComments = line -> !String.valueOf(line).startsWith("#");
-  private static Function2<Double, Double, Double> sumContributions = (acc, val) -> (acc + val);
-  private static PairFunction<String, String, String> fromNode_ToNodeList = line -> {
-    String[] parts = line.split("\\s+");
-    return new Tuple2<>(parts[0], parts[1]);
-  };
-  private static PairFlatMapFunction<Tuple2<Iterable<String>, Double>, String, Double> fromNode_contribValue = pair -> {
-    int urlCount = Iterables.size(pair._1);
-    return StreamSupport
-        .stream(pair._1().spliterator(), false)
-        .map(link -> new Tuple2<>(link, pair._2() / urlCount))
-        .collect(Collectors.toList())
-        .iterator();
+  private static Function<Double, Double> calcRanks = new Function<Double, Double>() {
+    @Override
+    public Double call(Double contrib) throws Exception {
+      return  0.15 + contrib * 0.85;
+    }
   };
 
+  private static Function<String, Boolean> notComments = new Function<String, Boolean>() {
+    @Override
+    public Boolean call(String line) throws Exception {
+      return !String.valueOf(line).startsWith("#");
+    }
+  };
+
+  private static Function2<Double, Double, Double> sumContributions = new Function2<Double, Double, Double>() {
+    @Override
+    public Double call(Double acc, Double val) {
+      return acc + val;
+    }
+  };
+
+  private static Function<Iterable<String>, Double> returnSeedValue = new Function<Iterable<String>, Double>() {
+    @Override
+    public Double call(Iterable<String> neighbours) {
+      return 1.0;
+    }
+  };
+
+  private static PairFunction<String, String, String> fromNode_ToNodeList = new PairFunction<String, String, String>() {
+    @Override
+    public Tuple2<String, String> call(String line) {
+      String[] parts = line.split("\\s+");
+      return new Tuple2<>(parts[0], parts[1]);
+    }
+  };
+
+  private static PairFlatMapFunction<Tuple2<Iterable<String>, Double>, String, Double> fromNode_contribValue = new PairFlatMapFunction<Tuple2<Iterable<String>, Double>, String, Double>() {
+    @Override
+    public Iterator<Tuple2<String, Double>> call(Tuple2<Iterable<String>, Double> neighboursAndRankTuple) throws Exception {
+      int urlCount = Iterables.size(neighboursAndRankTuple._1);
+      List<Tuple2<String, Double>> contributions = new ArrayList<>();
+      for (String n : neighboursAndRankTuple._1) {
+        contributions.add(new Tuple2<>(n, neighboursAndRankTuple._2 / urlCount));
+      }
+      return contributions.iterator();
+    }
+  };
 
 }
