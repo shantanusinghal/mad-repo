@@ -51,7 +51,8 @@ public class PartAQuestion3 {
         .read()
         .schema(new StructType().add("user", "string"))
         .csv(usersFilePath)
-        .as(Encoders.STRING());
+        .as(Encoders.STRING())
+        .cache();
 
     Dataset<Row> tweets = spark
         .readStream()

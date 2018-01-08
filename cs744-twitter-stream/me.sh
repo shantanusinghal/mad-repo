@@ -1,0 +1,2 @@
+spark-submit --name "PartAQuestion3" --master local --properties-file src/main/resources/log4j-spark.properties target/twitter-stream-3.0-SNAPSHOT-jar-with-dependencies.jar /Users/shantanusinghal/Downloads/split-dataset-2/ /Users/shantanusinghal/Downloads/split-dataset-1/users.csv
+trap "echo 'cleaning up background tasks...' | ps -eaf | grep tweet-monitoring | awk '{print $2}' | xargs kill -9" SIGINT SIGTERM SIGHUP EXIT
